@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCP/IP Model - Complete Guide</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+      body { font-family: 'Inter', sans-serif; }
+      html { scroll-behavior: smooth; }
+      /* Custom scrollbar for dark theme */
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0f172a; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155; 
+        border-radius: 5px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569; 
+      }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 antialiased selection:bg-blue-500 selection:text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+
+      // --- ICONS (Inline SVGs) ---
+      const Menu = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>;
+      const X = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
+      const Network = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>;
+      const Package = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22v-9"/></svg>;
+      const Truck = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>;
+      const Globe = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>;
+      const Shield = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>;
+      const Settings = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 1-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>;
+      const Monitor = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>;
+      const ArrowUpCircle = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></svg>;
+      const Info = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>;
+      const CheckCircle2 = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>;
+      const AlertTriangle = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>;
+      const Layers = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>;
+      const ArrowDown = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>;
+      const ArrowUp = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>;
+      const Zap = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+      const MousePointerClick = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 4.1 12 6"/><path d="m5.1 8-2.9-.8"/><path d="m6 12-1.9 2"/><path d="M7.2 2.2 8 5.1"/><path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"/></svg>;
+
+
+      // --- CONSTANTS ---
+      const NAV_ITEMS = [
+        { id: 'home', label: 'Home' },
+        { id: 'intro', label: 'What is TCP/IP?' },
+        { id: 'layers', label: 'The 4 Layers' },
+        { id: 'encapsulation', label: 'Encapsulation' },
+        { id: 'comparison', label: 'TCP/IP vs OSI' },
+        { id: 'troubleshooting', label: 'Troubleshooting' },
+      ];
+
+      const LAYERS = [
+        {
+          number: 4,
+          name: 'Application Layer',
+          icon: Package,
+          color: 'bg-indigo-500',
+          description: "The Application Layer is the topmost layer that combines the functionality of OSI's Application, Presentation, and Session layers. This is where network applications and end-user services operate.",
+          functions: [
+            "Provides network services directly to end-user applications",
+            "Handles data formatting, encryption, and compression",
+            "Manages application-level protocols (HTTP, FTP, SMTP)",
+            "User authentication and authorization"
+          ],
+          simpleTerm: "Where your apps interact with the network - browsing, emailing, streaming.",
+          dataUnit: "Data / Message",
+          protocols: ["HTTP/S", "FTP", "SMTP", "DNS", "SSH", "DHCP"],
+          realWorld: "When you type 'google.com', HTTP requests the page and DNS finds the IP."
+        },
+        {
+          number: 3,
+          name: 'Transport Layer',
+          icon: Truck,
+          color: 'bg-blue-500',
+          description: "Ensures reliable data transfer between devices. It's responsible for end-to-end communication, error detection, flow control, and data segmentation.",
+          functions: [
+            "Segments data from application layer",
+            "Reliable (TCP) or unreliable (UDP) delivery",
+            "Error detection and recovery",
+            "Port-based addressing (0-65535)"
+          ],
+          simpleTerm: "Like a delivery service. TCP is certified mail (guaranteed), UDP is regular mail (fast).",
+          dataUnit: "Segment (TCP) / Datagram (UDP)",
+          protocols: ["TCP", "UDP"],
+          realWorld: "TCP ensures your file download is perfect. UDP streams video fast even if frames drop."
+        },
+        {
+          number: 2,
+          name: 'Internet Layer',
+          icon: Globe,
+          color: 'bg-cyan-500',
+          description: "Handles logical addressing and routing of data packets across different networks. Determines the best path for data to travel from source to destination.",
+          functions: [
+            "Logical addressing (IPv4/IPv6)",
+            "Routing packets across networks",
+            "Path determination",
+            "Time-to-Live (TTL) management"
+          ],
+          simpleTerm: "GPS for data - finds the best route across the internet using IP addresses.",
+          dataUnit: "Packet",
+          protocols: ["IP", "ICMP", "ARP", "IPsec"],
+          realWorld: "Routers forward your email packet from New York to Tokyo via the best path."
+        },
+        {
+          number: 1,
+          name: 'Network Access Layer',
+          icon: Network,
+          color: 'bg-teal-500',
+          description: "Handles the physical transmission of data over network hardware and manages how devices access the physical network medium.",
+          functions: [
+            "Physical addressing (MAC)",
+            "Frame formatting",
+            "Media access control",
+            "Converting data to signals (bits)"
+          ],
+          simpleTerm: "The physical connection - cables, Wi-Fi signals, and network cards.",
+          dataUnit: "Frame / Bits",
+          protocols: ["Ethernet", "Wi-Fi (802.11)", "PPP"],
+          realWorld: "Your Wi-Fi card converting digital data into radio waves."
+        }
+      ];
+
+      const LAYER_DIAGRAM_DATA = {
+        4: {
+          title: "Application Layer Data",
+          subtitle: "Example: An HTTP Request",
+          parts: [
+            { 
+              id: "l4-method", 
+              label: "Method & URL", 
+              shortLabel: "GET /",
+              description: "The command telling the web server what to do.",
+              example: "GET /index.html HTTP/1.1",
+              className: "bg-indigo-900/50 border-indigo-700 text-indigo-200 w-1/4 min-w-[80px]" 
+            },
+            { 
+              id: "l4-headers", 
+              label: "Headers", 
+              description: "Metadata about the request, like browser type, cookies, and host.",
+              example: "Host: www.google.com\nUser-Agent: Chrome/90.0...",
+              className: "bg-indigo-900/50 border-indigo-700 text-indigo-200 w-1/3 min-w-[100px]" 
+            },
+            { 
+              id: "l4-data", 
+              label: "Body / Data", 
+              shortLabel: "Data",
+              description: "The actual user data content. Often empty in GET requests, but full in POST.",
+              example: "{ user_id: 12345 }",
+              className: "bg-amber-900/40 border-amber-700 text-amber-200 flex-1 min-w-[100px]" 
+            }
+          ]
+        },
+        3: {
+          title: "Transport Layer PDU (Segment)",
+          subtitle: "Example: TCP Segment Structure",
+          parts: [
+            { 
+              id: "l3-src", 
+              label: "Source Port", 
+              shortLabel: "Src Port",
+              description: "Identifies the specific application sending data on your computer.",
+              example: "Port 49152 (Random High Port)",
+              className: "bg-blue-900/50 border-blue-700 text-blue-200 w-1/6 min-w-[70px]" 
+            },
+            { 
+              id: "l3-dst", 
+              label: "Dest Port", 
+              shortLabel: "Dst Port",
+              description: "Identifies the specific service receiving data on the server.",
+              example: "Port 443 (HTTPS) or 80 (HTTP)",
+              className: "bg-blue-900/50 border-blue-700 text-blue-200 w-1/6 min-w-[70px]" 
+            },
+            { 
+              id: "l3-seq", 
+              label: "Sequence #", 
+              shortLabel: "Seq",
+              description: "Used to reorder packets if they arrive out of order.",
+              example: "Seq: 101, Ack: 102",
+              className: "bg-blue-900/50 border-blue-700 text-blue-200 w-1/6 min-w-[60px]" 
+            },
+            { 
+              id: "l3-data", 
+              label: "Payload", 
+              description: "The data passed down from the Application Layer.",
+              example: "[HTTP Request Data...]",
+              className: "bg-amber-900/40 border-amber-700 text-amber-200 flex-1 min-w-[120px]" 
+            }
+          ]
+        },
+        2: {
+          title: "Internet Layer PDU (Packet)",
+          subtitle: "Example: IP Packet Structure",
+          parts: [
+            { 
+              id: "l2-ver", 
+              label: "Header", 
+              shortLabel: "IP Hdr",
+              description: "Contains Version (IPv4/6), Length, and Protocol type.",
+              example: "Ver: 4, Len: 20, Proto: TCP",
+              className: "bg-cyan-900/50 border-cyan-700 text-cyan-200 w-1/6 min-w-[60px]" 
+            },
+            { 
+              id: "l2-ttl", 
+              label: "TTL", 
+              description: "Time-To-Live. A counter that decreases at each router to prevent infinite loops.",
+              example: "TTL: 64",
+              className: "bg-cyan-900/50 border-cyan-700 text-cyan-200 w-[10%] min-w-[50px]" 
+            },
+            { 
+              id: "l2-src", 
+              label: "Source IP", 
+              description: "The logical address of the sender (You).",
+              example: "192.168.1.15",
+              className: "bg-cyan-900/50 border-cyan-700 text-cyan-200 w-1/5 min-w-[100px]" 
+            },
+            { 
+              id: "l2-dst", 
+              label: "Dest IP", 
+              description: "The logical address of the destination (Server).",
+              example: "142.250.190.46 (Google)",
+              className: "bg-cyan-900/50 border-cyan-700 text-cyan-200 w-1/5 min-w-[100px]" 
+            },
+            { 
+              id: "l2-data", 
+              label: "Payload", 
+              description: "The Segment passed down from Transport Layer.",
+              example: "[TCP Segment...]",
+              className: "bg-amber-900/40 border-amber-700 text-amber-200 flex-1 min-w-[100px]" 
+            }
+          ]
+        },
+        1: {
+          title: "Network Access PDU (Frame)",
+          subtitle: "Example: Ethernet Frame Structure",
+          parts: [
+            { 
+              id: "l1-dst", 
+              label: "Dest MAC", 
+              description: "Physical address of the next device (e.g., Router or Switch).",
+              example: "00:1A:2B:3C:4D:5E",
+              className: "bg-teal-900/50 border-teal-700 text-teal-200 w-1/5 min-w-[110px]" 
+            },
+            { 
+              id: "l1-src", 
+              label: "Src MAC", 
+              description: "Physical address of your network card.",
+              example: "AA:BB:CC:DD:EE:FF",
+              className: "bg-teal-900/50 border-teal-700 text-teal-200 w-1/5 min-w-[110px]" 
+            },
+            { 
+              id: "l1-type", 
+              label: "Type", 
+              description: "Indicates the protocol type inside the payload (e.g., IPv4).",
+              example: "0x0800 (IPv4)",
+              className: "bg-teal-900/50 border-teal-700 text-teal-200 w-[10%] min-w-[60px]" 
+            },
+            { 
+              id: "l1-data", 
+              label: "Payload", 
+              description: "The Packet passed down from Internet Layer.",
+              example: "[IP Packet...]",
+              className: "bg-amber-900/40 border-amber-700 text-amber-200 flex-1 min-w-[100px]" 
+            },
+            { 
+              id: "l1-fcs", 
+              label: "FCS", 
+              description: "Frame Check Sequence. Used to detect errors during transmission.",
+              example: "0xDEADBEEF (CRC Check)",
+              className: "bg-slate-800 border-slate-600 text-slate-400 w-[10%] min-w-[50px]" 
+            }
+          ]
+        }
+      };
+
+
+      // --- COMPONENTS ---
+
+      // 1. InteractiveLayerDiagram
+      const InteractiveLayerDiagram = ({ layerNumber }) => {
+        const [activePart, setActivePart] = useState(null);
+        const data = LAYER_DIAGRAM_DATA[layerNumber];
+
+        if (!data) return null;
+
+        return (
+          <div className="mt-8 bg-slate-950/50 rounded-xl border border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/80">
+              <div>
+                <h4 className="font-bold text-slate-200 flex items-center">
+                  <Zap className="w-4 h-4 mr-2 text-yellow-500 fill-yellow-500" />
+                  Interactive Diagram: <span className="ml-1 font-normal text-slate-400">{data.title}</span>
+                </h4>
+                <p className="text-xs text-slate-500 mt-0.5 ml-6">{data.subtitle}</p>
+              </div>
+              <div className="hidden md:flex text-xs text-slate-500 items-center bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+                <MousePointerClick className="w-3 h-3 mr-1" />
+                Click segments
+              </div>
+            </div>
+
+            <div className="p-6">
+              {/* PDU Bar */}
+              <div className="flex w-full mb-6 overflow-x-auto pb-4 md:pb-0 touch-pan-x scrollbar-thin scrollbar-thumb-slate-700">
+                <div className="flex w-full min-w-max shadow-lg rounded-lg overflow-hidden ring-1 ring-slate-800">
+                  {data.parts.map((part) => (
+                    <button
+                      key={part.id}
+                      onClick={() => setActivePart(part)}
+                      className={`
+                        ${part.className} 
+                        border-r last:border-r-0 border-y py-4 px-2 
+                        text-xs md:text-sm font-bold truncate transition-all duration-200 
+                        hover:brightness-125 hover:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:z-20
+                        ${activePart?.id === part.id ? 'brightness-125 ring-2 ring-inset ring-blue-500 z-10 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'opacity-90'}
+                      `}
+                    >
+                      {part.shortLabel || part.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Info Box */}
+              <div className={`transition-all duration-300 ease-in-out ${activePart ? 'opacity-100 translate-y-0' : 'opacity-70 translate-y-2'}`}>
+                {activePart ? (
+                  <div className="bg-slate-800 rounded-lg border border-slate-700 p-5 shadow-lg relative animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <button 
+                      onClick={() => setActivePart(null)}
+                      className="absolute top-2 right-2 text-slate-500 hover:text-slate-300 p-1 rounded-full hover:bg-slate-700 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <h5 className="font-bold text-slate-100 mb-1 flex items-center text-lg">
+                      <Info className="w-5 h-5 mr-2 text-blue-400" />
+                      {activePart.label}
+                    </h5>
+                    <p className="text-slate-300 text-sm mb-4 leading-relaxed">{activePart.description}</p>
+                    <div className="bg-slate-900/80 rounded p-3 text-xs font-mono text-slate-300 border border-slate-700/50 shadow-inner">
+                      <span className="text-slate-500 select-none block text-[10px] uppercase mb-1 font-bold tracking-wider">Example Value</span>
+                      <pre className="whitespace-pre-wrap font-sans text-emerald-400">{activePart.example}</pre>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-slate-500 bg-slate-900/30 rounded-lg border border-dashed border-slate-800">
+                    <MousePointerClick className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">Select a segment above to see details and real-world examples.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // 2. LayerCard
+      const LayerCard = ({ layer }) => {
+        const Icon = layer.icon;
+
+        return (
+          <div className="bg-slate-900 rounded-xl shadow-xl overflow-hidden border border-slate-800 hover:shadow-2xl hover:border-slate-700 transition-all duration-300 mb-8 group">
+            <div className={`h-1.5 w-full ${layer.color} shadow-[0_0_10px_rgba(59,130,246,0.3)]`}></div>
+            <div className="p-6 md:p-8">
+              <div className="flex items-center mb-6">
+                <div className={`p-3 rounded-xl ${layer.color.replace('bg-', 'bg-opacity-10 bg-')} mr-5 shadow-inner`}>
+                  <Icon className={`h-8 w-8 ${layer.color.replace('bg-', 'text-')}`} />
+                </div>
+                <div>
+                  <span className={`text-xs font-bold uppercase tracking-widest ${layer.color.replace('bg-', 'text-')} mb-1 block`}>
+                    Layer {layer.number}
+                  </span>
+                  <h3 className="text-2xl md:text-3xl font-bold text-slate-100">{layer.name}</h3>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8 mb-8">
+                <div>
+                  <h4 className="font-semibold text-slate-200 mb-3 flex items-center text-lg">
+                    📦 Description
+                  </h4>
+                  <p className="text-slate-400 mb-6 leading-relaxed text-sm md:text-base">{layer.description}</p>
+                  
+                  <h4 className="font-semibold text-slate-200 mb-3 flex items-center text-lg">
+                    ⚙️ Key Functions
+                  </h4>
+                  <ul className="space-y-3 mb-4">
+                    {layer.functions.map((func, idx) => (
+                      <li key={idx} className="flex items-start text-slate-400 text-sm">
+                        <span className={`mt-1.5 h-1.5 w-1.5 rounded-full ${layer.color} mr-3 flex-shrink-0 shadow-[0_0_5px_currentColor]`}></span>
+                        {func}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800 h-fit backdrop-blur-sm">
+                  <div className="mb-5">
+                    <h4 className="font-semibold text-slate-200 mb-1.5">👨‍🏫 In Simple Terms</h4>
+                    <p className="text-sm text-slate-400 italic">"{layer.simpleTerm}"</p>
+                  </div>
+
+                  <div className="mb-5">
+                    <h4 className="font-semibold text-slate-200 mb-2">📦 Data Unit</h4>
+                    <span className="inline-block bg-slate-800 px-3 py-1 rounded-full text-xs font-bold border border-slate-700 text-slate-300 shadow-sm">
+                      {layer.dataUnit}
+                    </span>
+                  </div>
+
+                  <div className="mb-5">
+                    <h4 className="font-semibold text-slate-200 mb-2">💻 Protocols</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {layer.protocols.map((p, idx) => (
+                        <span key={idx} className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/50 text-blue-300 text-xs px-2 py-1 rounded font-medium transition-colors cursor-default">
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-slate-200 mb-1.5">🌍 Real World</h4>
+                    <p className="text-sm text-slate-400 border-l-2 border-slate-700 pl-3">
+                      {layer.realWorld}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interactive Diagram Section */}
+              <InteractiveLayerDiagram layerNumber={layer.number} />
+            </div>
+          </div>
+        );
+      };
+
+      // 3. Navigation
+      const Navigation = ({ items }) => {
+        const [isOpen, setIsOpen] = useState(false);
+        const [activeId, setActiveId] = useState('');
+
+        const toggleMenu = () => setIsOpen(!isOpen);
+
+        const scrollToSection = (id) => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setIsOpen(false);
+          }
+        };
+
+        useEffect(() => {
+          const handleScroll = () => {
+            const scrollPosition = window.scrollY + 100;
+            for (const item of items) {
+              const element = document.getElementById(item.id);
+              if (element && element.offsetTop <= scrollPosition && (element.offsetTop + element.offsetHeight) > scrollPosition) {
+                setActiveId(item.id);
+              }
+            }
+          };
+
+          window.addEventListener('scroll', handleScroll);
+          return () => window.removeEventListener('scroll', handleScroll);
+        }, [items]);
+
+        return (
+          <nav className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md shadow-lg border-b border-slate-900">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between h-16">
+                <div className="flex items-center cursor-pointer group" onClick={() => window.scrollTo(0, 0)}>
+                  <div className="mr-2 p-1.5 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
+                    <Network className="h-6 w-6 text-blue-500" />
+                  </div>
+                  <span className="font-bold text-xl tracking-tight text-slate-100">TCP/IP <span className="text-blue-500">Guide</span></span>
+                </div>
+                
+                {/* Desktop Menu */}
+                <div className="hidden md:flex items-center space-x-1">
+                  {items.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => scrollToSection(item.id)}
+                      className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                        activeId === item.id
+                          ? 'text-blue-400 bg-blue-950/50 shadow-[0_0_10px_rgba(59,130,246,0.1)]'
+                          : 'text-slate-400 hover:text-blue-300 hover:bg-slate-900'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Mobile Menu Button */}
+                <div className="flex items-center md:hidden">
+                  <button
+                    onClick={toggleMenu}
+                    className="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-white focus:outline-none"
+                  >
+                    {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Menu */}
+            {isOpen && (
+              <div className="md:hidden bg-slate-950 border-b border-slate-900 shadow-xl">
+                <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                  {items.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => scrollToSection(item.id)}
+                      className="block w-full text-left px-3 py-4 rounded-md text-base font-medium text-slate-400 hover:text-white hover:bg-slate-900"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </nav>
+        );
+      };
+
+      // 4. ComparisonChart
+      const comparisonData = [
+        { name: 'Application', model: 'OSI', layer: 7 },
+        { name: 'Presentation', model: 'OSI', layer: 6 },
+        { name: 'Session', model: 'OSI', layer: 5 },
+        { name: 'Transport', model: 'OSI', layer: 4 },
+        { name: 'Network', model: 'OSI', layer: 3 },
+        { name: 'Data Link', model: 'OSI', layer: 2 },
+        { name: 'Physical', model: 'OSI', layer: 1 },
+      ];
+
+      const ComparisonChart = () => {
+        return (
+          <div className="w-full bg-slate-900 p-6 rounded-xl shadow-xl border border-slate-800">
+            <h3 className="text-lg font-bold text-center mb-6 text-slate-200">Visual Layer Mapping</h3>
+            <div className="flex flex-col md:flex-row h-[400px] w-full gap-8">
+              
+              {/* OSI Model Stack */}
+              <div className="flex-1 flex flex-col">
+                <h4 className="text-center font-bold text-slate-400 mb-2">OSI Model (7 Layers)</h4>
+                <div className="flex-1 w-full bg-slate-950/50 rounded-lg p-4 flex flex-col space-y-1 justify-end border border-slate-800">
+                   {[7,6,5,4,3,2,1].map((num) => {
+                     const item = comparisonData.find(d => d.layer === num);
+                     return (
+                       <div key={num} className="h-10 w-full bg-indigo-900/40 border border-indigo-500/30 rounded flex items-center justify-between px-4 text-xs md:text-sm text-indigo-300 font-medium hover:bg-indigo-900/60 transition-colors">
+                          <span>{num}. {item?.name}</span>
+                       </div>
+                     );
+                   })}
+                </div>
+              </div>
+
+              {/* Center Arrows */}
+              <div className="hidden md:flex flex-col justify-center items-center text-slate-600">
+                 <span className="text-sm font-bold opacity-50">vs</span>
+              </div>
+
+              {/* TCP/IP Model Stack */}
+              <div className="flex-1 flex flex-col">
+                <h4 className="text-center font-bold text-slate-400 mb-2">TCP/IP Model (4 Layers)</h4>
+                <div className="flex-1 w-full bg-slate-950/50 rounded-lg p-4 flex flex-col space-y-1 justify-end border border-slate-800">
+                   {/* Application maps to 7,6,5 */}
+                   <div className="h-[7.75rem] w-full bg-blue-900/40 border border-blue-500/30 rounded flex items-center justify-center text-center px-4 text-xs md:text-sm text-blue-300 font-bold shadow-sm hover:bg-blue-900/60 transition-colors">
+                      <div>
+                         4. Application
+                         <div className="font-normal text-[10px] opacity-75 text-blue-400 mt-1">(Combines App, Pres, Session)</div>
+                      </div>
+                   </div>
+                   
+                   {/* Transport maps to 4 */}
+                   <div className="h-10 w-full bg-blue-900/40 border border-blue-500/30 rounded flex items-center justify-center px-4 text-xs md:text-sm text-blue-300 font-bold shadow-sm hover:bg-blue-900/60 transition-colors">
+                      3. Transport
+                   </div>
+
+                   {/* Internet maps to 3 */}
+                   <div className="h-10 w-full bg-blue-900/40 border border-blue-500/30 rounded flex items-center justify-center px-4 text-xs md:text-sm text-blue-300 font-bold shadow-sm hover:bg-blue-900/60 transition-colors">
+                      2. Internet
+                   </div>
+
+                   {/* Network Access maps to 2,1 */}
+                   <div className="h-[5.25rem] w-full bg-blue-900/40 border border-blue-500/30 rounded flex items-center justify-center text-center px-4 text-xs md:text-sm text-blue-300 font-bold shadow-sm hover:bg-blue-900/60 transition-colors">
+                      <div>
+                         1. Network Access
+                         <div className="font-normal text-[10px] opacity-75 text-blue-400 mt-1">(Combines Data Link, Physical)</div>
+                      </div>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // 5. EncapsulationVisual
+      const EncapsulationVisual = () => {
+        return (
+          <div className="space-y-12">
+            {/* Encapsulation (Down) */}
+            <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl">
+              <div className="flex items-center mb-6">
+                <div className="bg-emerald-500/10 p-2 rounded-full mr-3 border border-emerald-500/20">
+                  <ArrowDown className="text-emerald-400 w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-100">Encapsulation (Sending)</h3>
+              </div>
+              
+              <div className="relative pl-4 space-y-4">
+                <div className="absolute left-[1.65rem] top-4 bottom-4 w-0.5 bg-gradient-to-b from-blue-500/50 to-emerald-500/50"></div>
+
+                {/* Layer 4 */}
+                <div className="relative flex items-start group">
+                  <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold z-10 shrink-0 border-4 border-slate-900 shadow-lg shadow-blue-900/50">L4</div>
+                  <div className="ml-4 flex-1 bg-slate-950 p-4 rounded-lg border border-slate-800">
+                    <h4 className="font-bold text-slate-300">Application</h4>
+                    <p className="text-sm text-slate-500 mb-2">Original Data</p>
+                    <div className="bg-yellow-900/30 border border-yellow-700/50 text-yellow-500 px-3 py-1 text-center rounded text-sm font-mono">DATA</div>
+                  </div>
+                </div>
+
+                {/* Layer 3 */}
+                <div className="relative flex items-start group">
+                  <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold z-10 shrink-0 border-4 border-slate-900 shadow-lg shadow-blue-900/50">L3</div>
+                  <div className="ml-4 flex-1 bg-slate-950 p-4 rounded-lg border border-slate-800">
+                    <h4 className="font-bold text-slate-300">Transport</h4>
+                    <p className="text-sm text-slate-500 mb-2">Adds TCP/UDP Header</p>
+                    <div className="flex justify-center text-sm font-mono">
+                      <span className="bg-purple-900/40 border border-purple-700/50 text-purple-400 px-2 py-1 rounded-l border-r-0">TCP Hdr</span>
+                      <span className="bg-yellow-900/30 border border-yellow-700/50 text-yellow-500 px-3 py-1 rounded-r opacity-80">DATA</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Layer 2 */}
+                <div className="relative flex items-start group">
+                   <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold z-10 shrink-0 border-4 border-slate-900 shadow-lg shadow-blue-900/50">L2</div>
+                   <div className="ml-4 flex-1 bg-slate-950 p-4 rounded-lg border border-slate-800">
+                    <h4 className="font-bold text-slate-300">Internet</h4>
+                    <p className="text-sm text-slate-500 mb-2">Adds IP Header</p>
+                    <div className="flex justify-center text-sm font-mono text-xs md:text-sm">
+                      <span className="bg-red-900/40 border border-red-700/50 text-red-400 px-2 py-1 rounded-l border-r-0">IP Hdr</span>
+                      <span className="bg-purple-900/40 border border-purple-700/50 text-purple-400 px-2 py-1 border-r-0 opacity-80">TCP</span>
+                      <span className="bg-yellow-900/30 border border-yellow-700/50 text-yellow-500 px-3 py-1 rounded-r opacity-60">DATA</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Layer 1 */}
+                <div className="relative flex items-start group">
+                   <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold z-10 shrink-0 border-4 border-slate-900 shadow-lg shadow-blue-900/50">L1</div>
+                   <div className="ml-4 flex-1 bg-slate-950 p-4 rounded-lg border border-slate-800">
+                    <h4 className="font-bold text-slate-300">Network Access</h4>
+                    <p className="text-sm text-slate-500 mb-2">Adds MAC Header & Trailer</p>
+                    <div className="flex justify-center text-sm font-mono text-[10px] md:text-xs">
+                      <span className="bg-slate-800 border border-slate-700 text-slate-400 px-2 py-1 rounded-l border-r-0">Frame Hdr</span>
+                      <span className="bg-red-900/40 border border-red-700/50 text-red-400 px-2 py-1 border-r-0 opacity-80">IP</span>
+                      <span className="bg-purple-900/40 border border-purple-700/50 text-purple-400 px-2 py-1 border-r-0 opacity-60">TCP</span>
+                      <span className="bg-yellow-900/30 border border-yellow-700/50 text-yellow-500 px-2 py-1 border-r-0 opacity-40">DATA</span>
+                      <span className="bg-slate-800 border border-slate-700 text-slate-400 px-2 py-1 rounded-r">Trlr</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+             {/* Decapsulation (Up) */}
+             <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl mt-8">
+              <div className="flex items-center mb-2">
+                <div className="bg-orange-500/10 p-2 rounded-full mr-3 border border-orange-500/20">
+                  <ArrowUp className="text-orange-400 w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-100">Decapsulation (Receiving)</h3>
+              </div>
+              <p className="ml-11 mb-6 text-slate-400 text-sm">The reverse process: stripping headers as data moves up to the application.</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                   <div className="p-4 bg-slate-950/50 rounded-lg border border-slate-800 hover:border-blue-500/50 transition-colors">
+                       <div className="font-bold text-blue-400 mb-1">Layer 1</div>
+                       <div className="text-xs text-slate-500">Check MAC & remove Frame</div>
+                   </div>
+                   <div className="p-4 bg-slate-950/50 rounded-lg border border-slate-800 hover:border-blue-500/50 transition-colors">
+                       <div className="font-bold text-blue-400 mb-1">Layer 2</div>
+                       <div className="text-xs text-slate-500">Check IP & remove IP Header</div>
+                   </div>
+                   <div className="p-4 bg-slate-950/50 rounded-lg border border-slate-800 hover:border-blue-500/50 transition-colors">
+                       <div className="font-bold text-blue-400 mb-1">Layer 3</div>
+                       <div className="text-xs text-slate-500">Check Port, Reassemble</div>
+                   </div>
+                   <div className="p-4 bg-slate-950/50 rounded-lg border border-slate-800 hover:border-blue-500/50 transition-colors">
+                       <div className="font-bold text-blue-400 mb-1">Layer 4</div>
+                       <div className="text-xs text-slate-500">Present Data to User</div>
+                   </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // 6. App
+      const App = () => {
+        const [showScrollTop, setShowScrollTop] = useState(false);
+
+        useEffect(() => {
+          const handleScroll = () => {
+            setShowScrollTop(window.scrollY > 400);
+          };
+          window.addEventListener('scroll', handleScroll);
+          return () => window.removeEventListener('scroll', handleScroll);
+        }, []);
+
+        const scrollToTop = () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        return (
+          <div className="min-h-screen font-sans pb-20 selection:bg-blue-500/30 selection:text-blue-100">
+            <Navigation items={NAV_ITEMS} />
+
+            {/* Hero Section */}
+            <section id="home" className="relative pt-32 pb-24 border-b border-slate-900 overflow-hidden">
+              {/* Background Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-b from-slate-900 to-slate-950 z-0"></div>
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 z-0"></div>
+              
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-900/30 border border-blue-800 text-blue-300 text-sm font-medium mb-8 backdrop-blur-sm">
+                  <span className="flex h-2 w-2 bg-blue-400 rounded-full mr-2 animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.6)]"></span>
+                  Beginner's Guide to Networking
+                </div>
+                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-6 drop-shadow-lg">
+                  TCP/IP Model
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 text-3xl md:text-5xl mt-2 pb-2">
+                    Complete Guide for Beginners
+                  </span>
+                </h1>
+                <p className="mt-4 max-w-2xl mx-auto text-xl text-slate-400">
+                  Learn the 4-layer TCP/IP model, encapsulation, and how it differs from OSI in simple terms.
+                </p>
+              </div>
+            </section>
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20">
+              
+              {/* Intro Section */}
+              <section id="intro" className="py-16 scroll-mt-20">
+                <div className="bg-slate-900 rounded-2xl shadow-xl p-8 border border-slate-800">
+                  <div className="flex items-center mb-6">
+                    <Globe className="h-8 w-8 text-blue-500 mr-3" />
+                    <h2 className="text-3xl font-bold text-slate-100">What is the TCP/IP Model?</h2>
+                  </div>
+                  <div className="prose prose-invert max-w-none text-slate-400">
+                    <p className="text-lg leading-relaxed mb-6">
+                      The TCP/IP Model (Transmission Control Protocol/Internet Protocol) is a practical networking framework that defines how data is transmitted over the internet. Unlike the OSI Model, which is a theoretical reference, TCP/IP is the actual protocol suite used in real-world networks.
+                    </p>
+                    
+                    <div className="grid md:grid-cols-2 gap-6 mt-8">
+                      <div className="bg-blue-950/30 border border-blue-900/50 p-6 rounded-xl">
+                        <h3 className="font-bold text-blue-200 mb-4 flex items-center">
+                          <CheckCircle2 className="h-5 w-5 mr-2 text-blue-400" />
+                          Key Purposes
+                        </h3>
+                        <ul className="space-y-3">
+                          <li className="flex items-start"><span className="mr-2 text-blue-500">•</span> <strong className="text-blue-100 mr-1">Real-world:</strong> Used on the actual internet.</li>
+                          <li className="flex items-start"><span className="mr-2 text-blue-500">•</span> <strong className="text-blue-100 mr-1">Interoperability:</strong> Connects different hardware.</li>
+                          <li className="flex items-start"><span className="mr-2 text-blue-500">•</span> <strong className="text-blue-100 mr-1">Reliability:</strong> Ensures accurate delivery.</li>
+                        </ul>
+                      </div>
+                      <div className="bg-slate-950 p-6 rounded-xl flex flex-col justify-center border border-slate-800">
+                        <h3 className="font-bold text-slate-200 mb-2">Memory Aid</h3>
+                        <p className="text-slate-400 italic mb-4">"All Transport Internet Network Access"</p>
+                        <div className="text-sm font-medium text-slate-300 bg-slate-900 p-3 rounded border border-slate-800 text-center">
+                          Application → Transport → Internet → Network Access
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Layers Section */}
+              <section id="layers" className="py-12 scroll-mt-20">
+                <div className="flex items-center mb-10">
+                  <Layers className="h-8 w-8 text-blue-500 mr-3" />
+                  <h2 className="text-3xl font-bold text-slate-100">The 4 Layers of TCP/IP</h2>
+                </div>
+                <div className="space-y-6">
+                  {LAYERS.map((layer) => (
+                    <LayerCard key={layer.number} layer={layer} />
+                  ))}
+                </div>
+              </section>
+
+              {/* Encapsulation Section */}
+              <section id="encapsulation" className="py-16 scroll-mt-20">
+                <div className="mb-10">
+                  <h2 className="text-3xl font-bold flex items-center mb-4 text-slate-100">
+                    <Package className="h-8 w-8 text-blue-500 mr-3" />
+                    Encapsulation & Decapsulation
+                  </h2>
+                  <p className="text-lg text-slate-400 max-w-3xl">
+                    Encapsulation is like packing a gift. You put the item in a box (data), add a shipping label (header), and maybe put that in a bigger box. Each layer adds information to help deliver the data.
+                  </p>
+                </div>
+                
+                <EncapsulationVisual />
+                
+                <div className="mt-8 bg-amber-950/30 border-l-4 border-amber-500 p-6 rounded-r-lg border-y border-r border-amber-900/30">
+                   <h4 className="font-bold text-amber-200 flex items-center text-lg">
+                     <Info className="h-5 w-5 mr-2" />
+                     Key Term: PDU (Protocol Data Unit)
+                   </h4>
+                   <p className="text-amber-100/80 text-base mt-2">
+                     The name for the data packet changes at each layer: 
+                     <span className="font-mono bg-amber-900/50 px-1 rounded ml-1">Data</span> (App) → 
+                     <span className="font-mono bg-amber-900/50 px-1 rounded mx-1">Segment</span> (Transport) → 
+                     <span className="font-mono bg-amber-900/50 px-1 rounded mx-1">Packet</span> (Internet) → 
+                     <span className="font-mono bg-amber-900/50 px-1 rounded ml-1">Frame</span> (Network).
+                   </p>
+                </div>
+              </section>
+
+              {/* Comparison Section */}
+              <section id="comparison" className="py-16 scroll-mt-20 border-t border-slate-900">
+                <div className="mb-10">
+                  <h2 className="text-3xl font-bold flex items-center mb-4 text-slate-100">
+                    <Monitor className="h-8 w-8 text-blue-500 mr-3" />
+                    OSI vs TCP/IP
+                  </h2>
+                  <p className="text-lg text-slate-400">
+                    The OSI model has 7 layers and is theoretical. TCP/IP has 4 layers and is practical.
+                  </p>
+                </div>
+
+                <div className="grid lg:grid-cols-2 gap-12">
+                  <ComparisonChart />
+                  
+                  <div className="space-y-6">
+                    <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl">
+                       <h3 className="font-bold text-xl mb-4 text-slate-100">Which should you learn?</h3>
+                       <div className="space-y-4">
+                          <div className="p-3 bg-indigo-950/30 rounded border border-indigo-900/50">
+                            <span className="font-bold text-indigo-400 block mb-1">Learn OSI for:</span>
+                            <p className="text-sm text-slate-400">Theory, troubleshooting ("Layer 3 issue"), and certification exams.</p>
+                          </div>
+                          <div className="p-3 bg-blue-950/30 rounded border border-blue-900/50">
+                            <span className="font-bold text-blue-400 block mb-1">Learn TCP/IP for:</span>
+                            <p className="text-sm text-slate-400">Actual internet implementation, configuring routers, and coding protocols.</p>
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl">
+                      <h3 className="font-bold text-xl mb-4 text-slate-100">Key Differences</h3>
+                      <ul className="space-y-3 text-sm text-slate-400">
+                        <li className="flex items-start">
+                          <span className="bg-red-900/50 text-red-300 rounded px-2 py-0.5 text-xs font-bold mr-2 mt-0.5 border border-red-800">OSI</span>
+                          <span>7 Layers, Vertical approach, Theoretical.</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="bg-green-900/50 text-green-300 rounded px-2 py-0.5 text-xs font-bold mr-2 mt-0.5 border border-green-800">TCP/IP</span>
+                          <span>4 Layers, Horizontal approach, Practical.</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="bg-slate-800 text-slate-300 rounded px-2 py-0.5 text-xs font-bold mr-2 mt-0.5 border border-slate-700">NOTE</span>
+                          <span>TCP/IP combines OSI layers 5,6,7 into Application, and 1,2 into Network Access.</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Troubleshooting Section */}
+              <section id="troubleshooting" className="py-16 scroll-mt-20">
+                <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100 rounded-2xl p-8 md:p-12 shadow-2xl border border-slate-700">
+                  <div className="flex items-center mb-8">
+                    <Settings className="h-8 w-8 text-blue-400 mr-3" />
+                    <h2 className="text-3xl font-bold">Troubleshooting with TCP/IP</h2>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-12">
+                    <div>
+                      <h3 className="text-xl font-bold text-blue-300 mb-6">No Internet? Check Layers Bottom-Up:</h3>
+                      <ol className="space-y-6 relative border-l border-slate-700 ml-3 pl-8">
+                        <li className="relative">
+                          <span className="absolute -left-[39px] bg-slate-900 border border-slate-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold text-slate-400">1</span>
+                          <span className="font-bold text-white block mb-1">Network Access Layer</span>
+                          <span className="text-slate-400 text-sm">Is the cable plugged in? Is Wi-Fi on? Check the lights on the card.</span>
+                        </li>
+                        <li className="relative">
+                           <span className="absolute -left-[39px] bg-slate-900 border border-slate-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold text-slate-400">2</span>
+                          <span className="font-bold text-white block mb-1">Internet Layer</span>
+                          <span className="text-slate-400 text-sm">Can you reach the gateway? Try <code className="bg-slate-950 px-1 py-0.5 rounded text-green-400 text-xs">ping 192.168.1.1</code></span>
+                        </li>
+                        <li className="relative">
+                           <span className="absolute -left-[39px] bg-slate-900 border border-slate-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold text-slate-400">3</span>
+                          <span className="font-bold text-white block mb-1">Transport Layer</span>
+                          <span className="text-slate-400 text-sm">Is the firewall blocking ports? Can you telnet to the port?</span>
+                        </li>
+                        <li className="relative">
+                           <span className="absolute -left-[39px] bg-slate-900 border border-slate-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold text-slate-400">4</span>
+                          <span className="font-bold text-white block mb-1">Application Layer</span>
+                          <span className="text-slate-400 text-sm">Is the specific website down? Is DNS resolving names to IPs?</span>
+                        </li>
+                      </ol>
+                    </div>
+
+                    <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800">
+                       <h3 className="text-xl font-bold text-blue-300 mb-4 flex items-center">
+                         <Monitor className="w-5 h-5 mr-2" />
+                         Command Line Tools
+                       </h3>
+                       <div className="font-mono text-sm space-y-4">
+                          <div className="group">
+                            <div className="flex justify-between items-end border-b border-slate-800 pb-1 mb-1">
+                              <span className="text-green-400 font-bold">ping [ip]</span>
+                              <span className="text-slate-500 text-xs">Internet Layer</span>
+                            </div>
+                            <p className="text-slate-400 text-xs">Tests connectivity and latency to a destination.</p>
+                          </div>
+                          <div className="group">
+                            <div className="flex justify-between items-end border-b border-slate-800 pb-1 mb-1">
+                              <span className="text-green-400 font-bold">traceroute</span>
+                              <span className="text-slate-500 text-xs">Internet Layer</span>
+                            </div>
+                            <p className="text-slate-400 text-xs">Shows every router hop along the path.</p>
+                          </div>
+                          <div className="group">
+                            <div className="flex justify-between items-end border-b border-slate-800 pb-1 mb-1">
+                              <span className="text-green-400 font-bold">ipconfig / ifconfig</span>
+                              <span className="text-slate-500 text-xs">Net Access/Internet</span>
+                            </div>
+                            <p className="text-slate-400 text-xs">Displays your current IP and MAC address details.</p>
+                          </div>
+                          <div className="group">
+                            <div className="flex justify-between items-end border-b border-slate-800 pb-1 mb-1">
+                              <span className="text-green-400 font-bold">nslookup</span>
+                              <span className="text-slate-500 text-xs">Application Layer</span>
+                            </div>
+                            <p className="text-slate-400 text-xs">Queries DNS servers to find IP addresses for domains.</p>
+                          </div>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+            </main>
+
+            {/* Footer */}
+            <footer className="bg-slate-950 border-t border-slate-900 py-12 text-center">
+              <div className="max-w-7xl mx-auto px-4">
+                <p className="text-slate-500 mb-4">Educational Guide based on standard networking curriculums (CCNA).</p>
+                <div className="flex justify-center items-center space-x-2 text-slate-600 text-sm">
+                   <Shield className="h-4 w-4" />
+                   <span>TCP/IP is the foundation of the modern internet.</span>
+                </div>
+              </div>
+            </footer>
+
+            {/* Back to Top Button */}
+            <button
+              onClick={scrollToTop}
+              className={`fixed bottom-8 right-8 bg-blue-600 text-white p-3 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.5)] transition-all duration-300 hover:bg-blue-500 hover:scale-110 z-50 ${
+                showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+              }`}
+              aria-label="Back to top"
+            >
+              <ArrowUpCircle className="h-6 w-6" />
+            </button>
+          </div>
+        );
+      };
+
+      const rootElement = document.getElementById('root');
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(<App />);
+    </script>
+</body>
+</html>
